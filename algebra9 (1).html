@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Алгебра 9 класс</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{
+    --bg:#0f1220; --card:#1a1f35; --card2:#232a47; --accent:#6c8cff;
+    --accent2:#8b5cf6; --ok:#2dd4a7; --bad:#ff6b81; --text:#eef1ff;
+    --muted:#9aa3c7; --ring:rgba(108,140,255,.35);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%, #20264a 0%, var(--bg) 55%);
+    color:var(--text); min-height:100vh; overflow-x:hidden;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:16px 16px calc(90px + env(safe-area-inset-bottom));}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .brand{font-weight:800;font-size:18px;letter-spacing:.2px;display:flex;align-items:center;gap:8px;}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 12px var(--ring);}
+  .pill{font-size:12px;color:var(--muted);background:var(--card);border:1px solid rgba(255,255,255,.06);padding:6px 10px;border-radius:999px;}
+
+  .screen{animation:fade .35s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* Start */
+  .hero{text-align:center;padding:26px 18px;}
+  .hero h1{font-size:26px;margin:10px 0 6px;line-height:1.2;}
+  .hero p{color:var(--muted);font-size:14px;margin:0 0 22px;line-height:1.5;}
+  .logo{font-size:54px;line-height:1;}
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0;}
+  .stat{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:14px 8px;}
+  .stat b{display:block;font-size:22px;}
+  .stat span{font-size:11px;color:var(--muted);}
+
+  .btn{
+    width:100%;border:none;border-radius:16px;padding:16px;font-size:16px;font-weight:700;
+    color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer;
+    box-shadow:0 10px 24px -8px var(--ring);transition:transform .08s ease,filter .2s;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn.ghost{background:var(--card);border:1px solid rgba(255,255,255,.08);color:var(--text);}
+  .btn-row{display:flex;gap:10px;}
+  .btn-row .btn{flex:1;}
+  .topic-tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px;}
+  .tag{font-size:12px;color:var(--muted);background:var(--card);padding:7px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.06);}
+
+  /* Quiz */
+  .hud{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .progress{flex:1;height:8px;background:var(--card);border-radius:999px;overflow:hidden;}
+  .progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s ease;}
+  .counter{font-size:13px;color:var(--muted);white-space:nowrap;}
+  .timer{height:5px;background:var(--card);border-radius:999px;overflow:hidden;margin-bottom:16px;}
+  .timer i{display:block;height:100%;width:100%;background:var(--ok);transition:width 1s linear;}
+  .timer i.warn{background:var(--bad);}
+  .qcard{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px;}
+  .qtopic{font-size:12px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
+  .qtext{font-size:17px;line-height:1.45;font-weight:600;}
+  .options{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
+  .opt{
+    text-align:left;background:var(--card2);border:1px solid rgba(255,255,255,.07);color:var(--text);
+    border-radius:14px;padding:14px 14px;font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;
+  }
+  .opt:active{transform:scale(.99);}
+  .opt.correct{background:rgba(45,212,167,.16);border-color:var(--ok);color:#d6ffef;}
+  .opt.wrong{background:rgba(255,107,129,.14);border-color:var(--bad);}
+  .opt.disabled{pointer-events:none;opacity:.75;}
+  .explain{margin-top:14px;background:var(--card);border-left:3px solid var(--accent);border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.5;color:var(--text);display:none;}
+  .explain.show{display:block;animation:fade .3s ease;}
+  .feedback{margin-top:12px;font-weight:800;font-size:15px;text-align:center;min-height:20px;}
+  .feedback.ok{color:var(--ok);} .feedback.bad{color:var(--bad);}
+
+  .scoreline{display:flex;justify-content:space-between;margin-top:14px;font-size:13px;color:var(--muted);}
+  .scoreline b{color:var(--text);}
+  .streak{color:var(--accent2);}
+
+  /* Result */
+  .result{text-align:center;padding:20px 10px;}
+  .result .emoji{font-size:64px;}
+  .result h2{font-size:24px;margin:12px 0 4px;}
+  .result .sub{color:var(--muted);margin-bottom:20px;}
+  .rings{position:relative;width:150px;height:150px;margin:6px auto 18px;}
+  .rings svg{transform:rotate(-90deg);}
+  .rings .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .rings .num b{font-size:34px;}
+  .rings .num span{font-size:12px;color:var(--muted);}
+  .breakdown{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}
+  .bd{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px;}
+  .bd b{display:block;font-size:20px;}
+  .bd span{font-size:11px;color:var(--muted);}
+
+  /* Theory */
+  .theory-title{font-size:19px;font-weight:800;margin:6px 0 4px;}
+  .theory-sub{color:var(--muted);font-size:13px;margin:0 0 16px;line-height:1.5;}
+  .back-btn{background:var(--card);border:1px solid rgba(255,255,255,.08);color:var(--text);border-radius:12px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .tblock{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:16px;margin-bottom:12px;animation:fade .3s ease;}
+  .tblock h3{margin:0 0 10px;font-size:15px;color:var(--accent);}
+  .tblock ul{margin:0;padding-left:18px;}
+  .tblock li{font-size:14px;line-height:1.55;margin-bottom:7px;color:var(--text);}
+  .tblock li:last-child{margin-bottom:0;}
+  .hidden{display:none !important;}
+  .spacer{height:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- START -->
+  <section id="start" class="screen">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span> Алгебра · 9 класс</div>
+      <div class="pill" id="playerName">игрок</div>
+    </div>
+    <div class="hero">
+      <div class="logo">📐</div>
+      <h1>Тренажёр по алгебре</h1>
+      <p>Проверь знания за 9 класс: уравнения, функции, прогрессии и логарифмы. Отвечай быстро — очки растут со скоростью и серией!</p>
+      <div class="stats-grid">
+        <div class="stat"><b id="bestScore">0</b><span>Рекорд</span></div>
+        <div class="stat"><b id="playsCount">0</b><span>Игр сыграно</span></div>
+        <div class="stat"><b id="accuracy">—</b><span>Точность</span></div>
+      </div>
+      <button class="btn" id="startBtn">Начать игру</button>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="theoryHomeBtn">📖 Теория по темам</button>
+      <div class="spacer"></div>
+      <div class="topic-tags">
+        <span class="tag">Квадратные уравнения</span>
+        <span class="tag">Функции</span>
+        <span class="tag">Прогрессии</span>
+        <span class="tag">Логарифмы</span>
+        <span class="tag">Неравенства</span>
+        <span class="tag">Задачи</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="screen hidden">
+    <div class="hud">
+      <div class="progress"><i id="progBar"></i></div>
+      <div class="counter" id="qCounter">1 / 10</div>
+    </div>
+    <div class="timer"><i id="timeBar"></i></div>
+    <div class="qcard">
+      <div class="qtopic" id="qTopic">Тема</div>
+      <div class="qtext" id="qText">Вопрос?</div>
+    </div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="explain" id="explain"></div>
+    <div class="scoreline">
+      <span>Очки: <b id="liveScore">0</b></span>
+      <span class="streak" id="liveStreak">серия ×0</span>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="result" class="screen hidden">
+    <div class="result">
+      <div class="emoji" id="resEmoji">🏆</div>
+      <h2 id="resTitle">Отлично!</h2>
+      <div class="sub" id="resSub">Ты готов(а) к контрольной</div>
+      <div class="rings">
+        <svg width="150" height="150">
+          <circle cx="75" cy="75" r="64" stroke="#232a47" stroke-width="12" fill="none"/>
+          <circle id="ringFg" cx="75" cy="75" r="64" stroke="url(#g)" stroke-width="12" fill="none"
+                  stroke-linecap="round" stroke-dasharray="402" stroke-dashoffset="402"/>
+          <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#6c8cff"/><stop offset="1" stop-color="#8b5cf6"/>
+          </linearGradient></defs>
+        </svg>
+        <div class="num"><b id="resPct">0%</b><span>правильно</span></div>
+      </div>
+      <div class="breakdown">
+        <div class="bd"><b id="resScore">0</b><span>Очки</span></div>
+        <div class="bd"><b id="resCorrect">0</b><span>Правильных</span></div>
+        <div class="bd"><b id="resStreak">0</b><span>Лучшая серия</span></div>
+        <div class="bd"><b id="resTime">0с</b><span>Среднее время</span></div>
+      </div>
+      <button class="btn" id="againBtn">Играть ещё раз</button>
+      <div class="spacer"></div>
+      <button class="btn ghost hidden" id="theoryBtn">📖 Повторить теорию</button>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="homeBtn">На главную</button>
+    </div>
+  </section>
+
+  <!-- THEORY -->
+  <section id="theory" class="screen hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <button class="back-btn" id="theoryBack">← К результату</button>
+      <div class="brand"><span class="dot"></span> Теория</div>
+    </div>
+    <div class="theory-title" id="theoryTitle">Повторение тем</div>
+    <div class="theory-sub" id="theorySub">Разбор тех разделов, где были ошибки.</div>
+    <div id="theoryBody"></div>
+  </section>
+</div>
+
+<script>
+/* ============ ТЕЛЕГРАМ WEB APP ============ */
+const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+if(tg){ try{ tg.ready(); tg.expand(); if(tg.setHeaderColor) tg.setHeaderColor('#0f1220'); }catch(e){} }
+const haptic=(type)=>{ try{ if(tg&&tg.HapticFeedback){
+  if(type==='good') tg.HapticFeedback.notificationOccurred('success');
+  else if(type==='bad') tg.HapticFeedback.notificationOccurred('error');
+  else tg.HapticFeedback.impactOccurred('light');
+}}catch(e){} };
+
+/* ============ БАНК ВОПРОСОВ ============ */
+const BANK = [
+ // Квадратные уравнения
+ {t:"Квадратные уравнения", q:"Найдите корни уравнения x² − 5x + 6 = 0.", o:["x₁=2, x₂=3","x₁=−2, x₂=−3","x₁=1, x₂=6","Дискриминант отрицательный"], a:0, e:"По теореме Виета: сумма корней 5, произведение 6 → 2 и 3."},
+ {t:"Квадратные уравнения", q:"Чему равен дискриминант уравнения x² + 4x + 4 = 0?", o:["D = 0","D = 16","D = 32","D = −16"], a:0, e:"D = b² − 4ac = 16 − 16 = 0, уравнение имеет один корень."},
+ {t:"Квадратные уравнения", q:"Сколько корней имеет уравнение x² + 1 = 0 в действительных числах?", o:["0","1","2","Бесконечно много"], a:0, e:"x² = −1 не имеет действительных корней, так как квадрат неотрицателен."},
+ {t:"Квадратные уравнения", q:"Если D > 0, сколько корней имеет квадратное уравнение?", o:["2 различных","1","0","Зависит от a"], a:0, e:"При положительном дискриминанте два различных действительных корня."},
+ {t:"Квадратные уравнения", q:"Произведение корней уравнения 2x² − 6x + 3 = 0 равно:", o:["1,5","3","6","−1,5"], a:0, e:"По Виету: c/a = 3/2 = 1,5."},
+
+ // Квадратичная функция
+ {t:"Квадратичная функция", q:"Вершина параболы y = x² − 4x + 3 находится в точке:", o:["(2; −1)","(0; 3)","(4; 3)","(2; 3)"], a:0, e:"x₀ = −b/2a = 2, y₀ = 4 − 8 + 3 = −1."},
+ {t:"Квадратичная функция", q:"Направление ветвей параболы y = −2x² + 3x − 1:", o:["Вниз","Вверх","Влево","Зависит от x"], a:0, e:"Коэффициент a = −2 < 0 → ветви направлены вниз."},
+ {t:"Квадратичная функция", q:"Множество значений функции y = x²:", o:["[0; +∞)","(−∞; +∞)","(0; +∞)","(−∞; 0]"], a:0, e:"Квадрат неотрицателен, минимум равен 0 при x = 0."},
+ {t:"Квадратичная функция", q:"Где пересекается парабола y = x² с осью Ox?", o:["В одной точке (0;0)","В двух точках","Не пересекается","Во всех точках"], a:0, e:"x² = 0 → x = 0, единственная точка пересечения."},
+
+ // Системы уравнений
+ {t:"Системы уравнений", q:"Решение системы x + y = 5, x − y = 1:", o:["x=3, y=2","x=2, y=3","x=5, y=1","x=4, y=1"], a:0, e:"Сложим: 2x = 6 → x = 3, тогда y = 2."},
+ {t:"Системы уравнений", q:"Сколько решений может иметь система из двух линейных уравнений?", o:["0, 1 или бесконечно","Только 1","Только 2","Только 0"], a:0, e:"Прямые могут не пересекаться, касаться в точке или совпадать."},
+
+ // Степени и степени
+ {t:"Степени", q:"Вычислите 2³ · 2⁴:", o:["2⁷","2¹²","4⁷","2¹"], a:0, e:"При умножении степеней с одинаковым основанием показатели складываются: 3+4=7."},
+ {t:"Степени", q:"Чему равно (3²)³?", o:["3⁶","3⁵","9³","3⁹"], a:0, e:"Степень возводится в степень: показатели перемножаются 2·3=6."},
+ {t:"Степени", q:"Чему равно 5⁰?", o:["1","0","5","Не определено"], a:0, e:"Любое ненулевое число в нулевой степени равно 1."},
+ {t:"Степени", q:"Упростите a² · a⁻⁵:", o:["a⁻³","a³","a⁻⁷","a⁷"], a:0, e:"Показатели складываются: 2 + (−5) = −3."},
+
+ // Прогрессии
+ {t:"Арифметическая прогрессия", q:"Первый член AP = 3, разность d = 4. Найдите пятый член.", o:["15","19","12","16"], a:0, e:"a₅ = a₁ + 4d = 3 + 16 = 19."},
+ {t:"Арифметическая прогрессия", q:"Сумма первых n членов AP: S_n = ?", o:["n(a₁+aₙ)/2","n·a₁·d","a₁·n²","n(a₁−aₙ)/2"], a:0, e:"Классическая формула суммы арифметической прогрессии."},
+ {t:"Арифметическая прогрессия", q:"Разность арифметической прогрессии равна:", o:["aₙ − aₙ₋₁","aₙ / aₙ₋₁","aₙ + aₙ₋₁","a₁ · n"], a:0, e:"Каждый следующий член больше предыдущего на постоянную разность d."},
+ {t:"Геометрическая прогрессия", q:"Первый член GP = 2, знаменатель q = 3. Третий член:", o:["18","12","9","6"], a:0, e:"a₃ = a₁·q² = 2·9 = 18."},
+ {t:"Геометрическая прогрессия", q:"Сумма бесконечно убывающей GP (|q|<1): S = ?", o:["a₁/(1−q)","a₁·q","a₁/(1+q)","a₁·(1−q)"], a:0, e:"Формула суммы бесконечно убывающей геометрической прогрессии."},
+ {t:"Прогрессии", q:"Среднее арифметическое чисел 4 и 10:", o:["7","6","8","14"], a:0, e:"(4 + 10)/2 = 7."},
+ {t:"Прогрессии", q:"Среднее геометрическое чисел 4 и 9:", o:["6","√36","3,5","13"], a:0, e:"√(4·9) = √36 = 6."},
+
+ // Показательные и логарифмы
+ {t:"Логарифмы", q:"log₂ 8 = ?", o:["3","4","2","8"], a:0, e:"2³ = 8, значит log₂ 8 = 3."},
+ {t:"Логарифмы", q:"lg 1000 = ?", o:["3","1000","10","0,3"], a:0, e:"10³ = 1000 → lg 1000 = 3."},
+ {t:"Логарифмы", q:"log₃ 9 + log₃ 27 = ?", o:["5","36","5·3","81"], a:0, e:"log₃ 9 = 2, log₃ 27 = 3, сумма = 5."},
+ {t:"Логарифмы", q:"log_a (x·y) = ?", o:["log_a x + log_a y","log_a x · log_a y","log_a (x+y)","log_a x − log_a y"], a:0, e:"Логарифм произведения равен сумме логарифмов."},
+ {t:"Показательные", q:"Решите уравнение 2ˣ = 32:", o:["x = 5","x = 4","x = 6","x = 10"], a:0, e:"32 = 2⁵, значит x = 5."},
+ {t:"Показательные", q:"Решите уравнение 3ˣ = 81:", o:["x = 4","x = 3","x = 9","x = 27"], a:0, e:"81 = 3⁴, значит x = 4."},
+
+ // Неравенства
+ {t:"Неравенства", q:"Решите неравенство 2x − 6 > 0:", o:["x > 3","x < 3","x > −3","x < −3"], a:0, e:"2x > 6 → x > 3."},
+ {t:"Неравенства", q:"При делении неравенства на отрицательное число знак:", o:["Меняется на противоположный","Не меняется","Становится равенством","Исчезает"], a:0, e:"Это ключевое правило: при умножении/делении на отрицательное число знак меняется."},
+ {t:"Неравенства", q:"Решение неравенства x² < 4:", o:["(−2; 2)","x < 2","x > −2","(2; +∞)"], a:0, e:"|x| < 2 → −2 < x < 2."},
+ {t:"Неравенства", q:"Решение неравенства (x−1)(x+3) ≤ 0:", o:["[−3; 1]","[1; 3]","(−∞; −3] ∪ [1; +∞)","[−3; +∞)"], a:0, e:"Корни −3 и 1, между ними выражение ≤ 0 (парабола вверх)."},
+
+ // Функции вообще
+ {t:"Функции", q:"Область определения функции y = 1/(x − 2):", o:["x ≠ 2","x ≥ 2","x > 2","Все x"], a:0, e:"Знаменатель не может быть нулём → x ≠ 2."},
+ {t:"Функции", q:"Область определения y = √(x − 5):", o:["x ≥ 5","x > 5","x ≤ 5","Все x"], a:0, e:"Подкоренное выражение неотрицательно: x − 5 ≥ 0."},
+ {t:"Функции", q:"Функция y = kx + b (k ≠ 0) называется:", o:["Линейной","Квадратичной","Константой","Обратной пропорциональностью"], a:0, e:"График — прямая, это линейная функция."},
+ {t:"Функции", q:"Функция y = k/x (k ≠ 0) называется:", o:["Обратной пропорциональностью","Линейной","Квадратичной","Постоянной"], a:0, e:"График — гипербола, это обратная пропорциональность."},
+
+ // Задачи
+ {t:"Задачи", q:"В прямоугольном треугольнике катеты 3 и 4. Гипотенуза:", o:["5","7","6","12"], a:0, e:"По теореме Пифагора: √(9+16) = √25 = 5."},
+ {t:"Задачи", q:"Сумма двух чисел 20, их разность 4. Меньшее число:", o:["8","6","10","16"], a:0, e:"x + y = 20, x − y = 4 → 2x = 24 → x = 12, y = 8."},
+ {t:"Задачи", q:"Покупатель купил товар со скидкой 25%. Если цена стала 750 ₽, исходная цена:", o:["1000 ₽","900 ₽","1050 ₽","800 ₽"], a:0, e:"750 = 0,75·C → C = 750/0,75 = 1000 ₽."},
+ {t:"Задачи", q:"Число увеличилось на 20%. На сколько процентов оно уменьшится, чтобы вернуться к исходному?", o:["≈16,7%","20%","25%","16%"], a:0, e:"1,2·x·(1−p) = x → 1−p = 1/1,2 ≈ 0,833 → p ≈ 16,7%."},
+ {t:"Задачи", q:"Пуля летит со скоростью 500 м/с. За какое время она пролетит 2 км?", o:["4 с","2 с","5 с","0,4 с"], a:0, e:"t = s/v = 2000/500 = 4 с."},
+];
+
+/* ============ ТЕОРИЯ ПО ТЕМАМ ============ */
+const THEORY = {
+ "Квадратные уравнения": [
+   "Квадратное уравнение: ax² + bx + c = 0, где a ≠ 0.",
+   "Дискриминант D = b² − 4ac. Если D > 0 — два корня, D = 0 — один корень, D < 0 — нет действительных корней.",
+   "Корни: x = (−b ± √D) / 2a.",
+   "Теорема Виета: сумма корней x₁+x₂ = −b/a, произведение x₁·x₂ = c/a."
+ ],
+ "Квадратичная функция": [
+   "Функция y = ax² + bx + c, график — парабола.",
+   "Если a > 0 — ветви вверх, если a < 0 — ветви вниз.",
+   "Вершина параболы: x₀ = −b/2a, y₀ = f(x₀).",
+   "Множество значений зависит от вершины и направления ветвей."
+ ],
+ "Системы уравнений": [
+   "Система двух линейных уравнений решается подстановкой или сложением.",
+   "Геометрический смысл: пересечение двух прямых.",
+   "Решений может быть 0 (прямые параллельны), 1 (пересекаются) или бесконечно много (совпадают)."
+ ],
+ "Степени": [
+   "При умножении степеней с одинаковым основанием показатели складываются: aᵐ · aⁿ = aᵐ⁺ⁿ.",
+   "При делении — вычитаются: aᵐ / aⁿ = aᵐ⁻ⁿ.",
+   "Возведение степени в степень: (aᵐ)ⁿ = aᵐ·ⁿ.",
+   "Любое ненулевое число в нулевой степени равно 1: a⁰ = 1."
+ ],
+ "Арифметическая прогрессия": [
+   "Каждый член больше предыдущего на постоянную разность d.",
+   "n-й член: aₙ = a₁ + (n−1)d.",
+   "Сумма первых n членов: Sₙ = n(a₁ + aₙ)/2.",
+   "Среднее арифметическое двух чисел: (a+b)/2."
+ ],
+ "Геометрическая прогрессия": [
+   "Каждый член получается умножением предыдущего на знаменатель q.",
+   "n-й член: aₙ = a₁ · qⁿ⁻¹.",
+   "Сумма бесконечно убывающей GP (|q| < 1): S = a₁/(1−q).",
+   "Среднее геометрическое двух чисел: √(a·b)."
+ ],
+ "Прогрессии": [
+   "Арифметическая прогрессия — постоянная разность d.",
+   "Геометрическая прогрессия — постоянный знаменатель q.",
+   "Среднее арифметическое: (a+b)/2; среднее геометрическое: √(a·b)."
+ ],
+ "Логарифмы": [
+   "log_a b = c означает aᶜ = b.",
+   "log_a(xy) = log_a x + log_a y; log_a(x/y) = log_a x − log_a y.",
+   "log_a xⁿ = n·log_a x.",
+   "lg — логарифм по основанию 10, ln — по основанию e."
+ ],
+ "Показательные": [
+   "Уравнение aˣ = b решается приведением к одному основанию.",
+   "Если aˣ = aᵏ, то x = k.",
+   "Числа вроде 32 = 2⁵, 81 = 3⁴ удобно представлять как степень."
+ ],
+ "Неравенства": [
+   "При умножении/делении на отрицательное число знак неравенства меняется.",
+   "Квадратичное неравенство решается методом интервалов через корни соответствующего уравнения.",
+   "x² < a² ⇔ |x| < a (если a > 0)."
+ ],
+ "Функции": [
+   "Область определения (ОДЗ) — все значения x, при которых функция имеет смысл.",
+   "В знаменателе не может быть 0; подкоренное выражение ≥ 0.",
+   "y = kx + b — линейная функция (график — прямая).",
+   "y = k/x — обратная пропорциональность (график — гипербола)."
+ ],
+ "Задачи": [
+   "Теорема Пифагора: c² = a² + b² для прямоугольного треугольника.",
+   "Процентные задачи: часть = целое × процент/100.",
+   "Задачи на движение: расстояние = скорость × время (s = v·t)."
+ ]
+};
+
+/* ============ СОСТОЯНИЕ ============ */
+const TOTAL = 10, TIME_PER_Q = 40;
+let deck=[], idx=0, score=0, correct=0, streak=0, bestStreak=0, times=[];
+let timer=null, timeLeft=TIME_PER_Q, answered=false;
+let wrongTopics=[];
+let curOpts=null;   // текущий (перемешанный) порядок вариантов
+let stats={best:0, plays:0, sumAcc:0};
+try{ stats = JSON.parse(localStorage.getItem('alg9_stats')||'{"best":0,"plays":0,"sumAcc":0}') }catch(e){}
+
+const $=id=>document.getElementById(id);
+function show(id){ ['start','quiz','result','theory'].forEach(s=>$(s).classList.toggle('hidden', s!==id)); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function renderStats(){
+  $('bestScore').textContent = stats.best;
+  $('playsCount').textContent = stats.plays;
+  $('accuracy').textContent = stats.plays? Math.round(stats.sumAcc/stats.plays)+'%' : '—';
+}
+function playerName(){
+  if(tg && tg.initDataUnsafe && tg.initDataUnsafe.user){
+    const u=tg.initDataUnsafe.user;
+    return (u.first_name||u.username||'игрок');
+  }
+  return 'игрок';
+}
+
+/* ============ ИГРА ============ */
+function startGame(){
+  deck = shuffle(BANK).slice(0,TOTAL);
+  idx=0; score=0; correct=0; streak=0; bestStreak=0; times=[]; wrongTopics=[];
+  show('quiz'); haptic('tap');
+  nextQuestion();
+}
+
+function nextQuestion(){
+  answered=false;
+  const item=deck[idx];
+  $('qCounter').textContent = (idx+1)+' / '+TOTAL;
+  $('progBar').style.width = (idx/TOTAL*100)+'%';
+  $('qTopic').textContent = item.t;
+  $('qText').textContent = item.q;
+  $('feedback').textContent=''; $('feedback').className='feedback';
+  $('explain').classList.remove('show');
+  $('liveScore').textContent=score; $('liveStreak').textContent='серия ×'+streak;
+  const box=$('options'); box.innerHTML='';
+  // перемешиваем порядок вариантов: правильный ответ не всегда сверху
+  curOpts = shuffle(item.o.map((txt,i)=>({txt, correct:i===item.a})));
+  curOpts.forEach((opt,pos)=>{
+    const b=document.createElement('button');
+    b.className='opt'; b.textContent=opt.txt;
+    b.onclick=()=>choose(pos,b);
+    box.appendChild(b);
+  });
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timer); timeLeft=TIME_PER_Q;
+  const bar=$('timeBar'); bar.style.width='100%'; bar.classList.remove('warn');
+  timer=setInterval(()=>{
+    timeLeft--;
+    bar.style.width=(timeLeft/TIME_PER_Q*100)+'%';
+    if(timeLeft<=5) bar.classList.add('warn');
+    if(timeLeft<=0){ clearInterval(timer); choose(null,null,true); }
+  },1000);
+}
+
+function choose(i,el,timeout=false){
+  if(answered) return; answered=true; clearInterval(timer);
+  const item=deck[idx];
+  const opts=[...$('options').children];
+  opts.forEach(o=>o.classList.add('disabled'));
+  const isCorrect = curOpts[i].correct;
+  if(isCorrect){ el.classList.add('correct'); haptic('good'); }
+  else {
+    if(el) el.classList.add('wrong');
+    // подсветим правильный вариант (ищем его позицию в перемешанном порядке)
+    const correctPos = curOpts.findIndex(o=>o.correct);
+    opts[correctPos].classList.add('correct');
+    haptic('bad');
+  }
+  const spent = TIME_PER_Q - timeLeft;
+  times.push(spent);
+  const fb=$('feedback');
+  if(isCorrect){
+    streak++; bestStreak=Math.max(bestStreak,streak);
+    const speedBonus = Math.max(0, timeLeft)*2;   // бонус за скорость
+    const streakBonus = (streak-1)*10;           // бонус за серию
+    const gained = 100 + speedBonus + streakBonus;
+    score+=gained; correct++;
+    fb.textContent='Верно! +'+gained+(streak>=2?' 🔥':'');
+    fb.className='feedback ok';
+  }else{
+    streak=0;
+    if(!wrongTopics.includes(item.t)) wrongTopics.push(item.t);
+    fb.textContent = timeout? 'Время вышло!' : 'Неверно.';
+    fb.className='feedback bad';
+  }
+  $('liveScore').textContent=score; $('liveStreak').textContent='серия ×'+streak;
+  const ex=$('explain'); ex.textContent=item.e; ex.classList.add('show');
+  setTimeout(()=>{ idx++; if(idx<TOTAL) nextQuestion(); else finish(); }, 1700);
+}
+
+function finish(){
+  const pct=Math.round(correct/TOTAL*100);
+  const avgT = times.length? (times.reduce((a,b)=>a+b,0)/times.length) : 0;
+  // обновить статистику
+  stats.plays++; stats.sumAcc+=pct; stats.best=Math.max(stats.best,score);
+  try{ localStorage.setItem('alg9_stats',JSON.stringify(stats)) }catch(e){}
+  renderStats();
+  // ring
+  const C=402, off=C*(1-pct/100);
+  const fg=$('ringFg'); fg.style.transition='stroke-dashoffset 1s ease';
+  requestAnimationFrame(()=>{ fg.style.strokeDashoffset=off; });
+  $('resPct').textContent=pct+'%';
+  $('resScore').textContent=score;
+  $('resCorrect').textContent=correct+' / '+TOTAL;
+  $('resStreak').textContent='×'+bestStreak;
+  $('resTime').textContent=avgT.toFixed(1)+'с';
+  let emoji,title,sub;
+  if(pct>=90){emoji='🏆';title='Великолепно!';sub='Ты настоящий знаток алгебры.';}
+  else if(pct>=70){emoji='🎉';title='Отличный результат!';sub='Ещё немного — и будет идеально.';}
+  else if(pct>=50){emoji='💪';title='Хорошо!';sub='База есть, стоит повторить темы.';}
+  else {emoji='📚';title='Есть куда расти';sub='Повтори материал и попробуй снова.';}
+  $('resEmoji').textContent=emoji; $('resTitle').textContent=title; $('resSub').textContent=sub;
+  // кнопка теории — только если были ошибки
+  const tb=$('theoryBtn');
+  if(wrongTopics.length){ tb.classList.remove('hidden'); } else { tb.classList.add('hidden'); }
+  show('result'); haptic(pct>=50?'good':'bad');
+  // отправить результат боту
+  if(tg && tg.sendData){
+    try{ tg.sendData(JSON.stringify({game:'algebra9',score:score,correct:correct,total:TOTAL,pct:pct,streak:bestStreak})) }catch(e){}
+  }
+}
+
+/* ============ КНОПКИ ============ */
+$('startBtn').onclick=startGame;
+$('againBtn').onclick=startGame;
+$('homeBtn').onclick=()=>{ show('start'); renderStats(); };
+$('playerName').textContent=playerName();
+renderStats();
+
+// Экран теории по темам с ошибками / по всем темам
+let theoryReturn='result';
+function openTheory(fromResult){
+  const body=$('theoryBody'); body.innerHTML='';
+  theoryReturn = fromResult? 'result' : 'start';
+  const topics = (fromResult && wrongTopics.length)? wrongTopics : Object.keys(THEORY);
+  $('theoryTitle').textContent = (fromResult && wrongTopics.length)? 'Разбор твоих ошибок' : 'Теория по темам';
+  $('theorySub').textContent = (fromResult && wrongTopics.length)
+    ? 'Эти темы стоит повторить перед следующей попыткой:'
+    : 'Ключевые формулы и правила алгебры 9 класса.';
+  topics.forEach(t=>{
+    const block=document.createElement('div');
+    block.className='tblock';
+    const h=document.createElement('h3'); h.textContent=t;
+    const ul=document.createElement('ul');
+    const pts = THEORY[t] || ['Материал по этой теме — в учебнике за 9 класс.'];
+    pts.forEach(p=>{ const li=document.createElement('li'); li.textContent=p; ul.appendChild(li); });
+    block.appendChild(h); block.appendChild(ul);
+    body.appendChild(block);
+  });
+  show('theory'); window.scrollTo(0,0); haptic('tap');
+}
+$('theoryBtn').onclick=()=>openTheory(true);
+$('theoryHomeBtn').onclick=()=>openTheory(false);
+$('theoryBack').onclick=()=>{ show(theoryReturn==='result'?'result':'start'); };
+
+// MainButton Telegram для навигации после результата
+if(tg && tg.MainButton){
+  tg.MainButton.setParams({text:'На главную', color:'#6c8cff', text_color:'#ffffff'});
+  tg.MainButton.onClick=()=>{ show('start'); renderStats(); };
+}
+</script>
+</body>
+</html>
